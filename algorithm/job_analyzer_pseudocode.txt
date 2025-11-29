@@ -1,0 +1,344 @@
+================================================================================
+JOB APPLICATION ANALYZER SYSTEM - ALGORITHM
+================================================================================
+Student: Yagyansh Singh Ahlawat (2501010120)
+Domain: Cybersecurity
+Assignment: ETCCCP105 - Career Planning
+================================================================================
+
+PROBLEM DEFINITION:
+-------------------
+Create an automated system that helps job seekers in the cybersecurity domain
+track applications, analyze resume-job description compatibility, and provide
+actionable recommendations for improving application success rates.
+
+Input: 
+- User resume content (skills, experience, certifications)
+- Job description text
+- Application details (company, position, deadline, status)
+
+Output:
+- Compatibility score (0-100%)
+- Missing keywords/skills
+- Application status tracking
+- Interview preparation checklist
+- Recommendations for improvement
+
+================================================================================
+ALGORITHM: JOB APPLICATION ANALYZER
+================================================================================
+
+ALGORITHM JobApplicationAnalyzer
+
+// Data Structures
+DECLARE resumeData AS OBJECT {
+    skills: ARRAY of STRING,
+    certifications: ARRAY of STRING,
+    experience: ARRAY of STRING,
+    education: STRING
+}
+
+DECLARE jobDescription AS OBJECT {
+    requiredSkills: ARRAY of STRING,
+    preferredSkills: ARRAY of STRING,
+    certifications: ARRAY of STRING,
+    experienceLevel: STRING
+}
+
+DECLARE applicationTracker AS ARRAY of OBJECT {
+    company: STRING,
+    position: STRING,
+    dateApplied: DATE,
+    status: STRING,
+    deadline: DATE,
+    matchScore: NUMBER
+}
+
+// Main Program
+BEGIN
+
+    // Step 1: Initialize System
+    PRINT "=== Job Application Analyzer System ==="
+    PRINT "Domain: Cybersecurity Career Planning"
+    
+    // Step 2: Input Resume Data
+    FUNCTION loadResumeData()
+        INPUT "Enter your skills (comma-separated): " INTO skillsInput
+        resumeData.skills = SPLIT(skillsInput, ",")
+        
+        INPUT "Enter certifications (comma-separated): " INTO certsInput
+        resumeData.certifications = SPLIT(certsInput, ",")
+        
+        INPUT "Enter years of experience: " INTO expInput
+        resumeData.experience = expInput
+        
+        RETURN resumeData
+    END FUNCTION
+    
+    // Step 3: Input Job Description
+    FUNCTION loadJobDescription()
+        INPUT "Enter job title: " INTO jobTitle
+        INPUT "Enter required skills (comma-separated): " INTO reqSkills
+        jobDescription.requiredSkills = SPLIT(reqSkills, ",")
+        
+        INPUT "Enter preferred skills (comma-separated): " INTO prefSkills
+        jobDescription.preferredSkills = SPLIT(prefSkills, ",")
+        
+        INPUT "Enter required certifications: " INTO reqCerts
+        jobDescription.certifications = SPLIT(reqCerts, ",")
+        
+        RETURN jobDescription
+    END FUNCTION
+    
+    // Step 4: Calculate Compatibility Score
+    FUNCTION calculateMatchScore(resume, jobDesc)
+        SET totalPoints = 0
+        SET maxPoints = 100
+        
+        // Skills Matching (50 points)
+        SET requiredSkillsMatch = 0
+        FOR EACH skill IN jobDesc.requiredSkills DO
+            IF skill IN resume.skills THEN
+                requiredSkillsMatch = requiredSkillsMatch + 1
+            END IF
+        END FOR
+        
+        SET skillScore = (requiredSkillsMatch / LENGTH(jobDesc.requiredSkills)) * 50
+        totalPoints = totalPoints + skillScore
+        
+        // Certifications Matching (30 points)
+        SET certMatch = 0
+        FOR EACH cert IN jobDesc.certifications DO
+            IF cert IN resume.certifications THEN
+                certMatch = certMatch + 1
+            END IF
+        END FOR
+        
+        IF LENGTH(jobDesc.certifications) > 0 THEN
+            SET certScore = (certMatch / LENGTH(jobDesc.certifications)) * 30
+            totalPoints = totalPoints + certScore
+        ELSE
+            totalPoints = totalPoints + 30
+        END IF
+        
+        // Preferred Skills (20 points bonus)
+        SET prefSkillMatch = 0
+        FOR EACH skill IN jobDesc.preferredSkills DO
+            IF skill IN resume.skills THEN
+                prefSkillMatch = prefSkillMatch + 1
+            END IF
+        END FOR
+        
+        IF LENGTH(jobDesc.preferredSkills) > 0 THEN
+            SET prefScore = (prefSkillMatch / LENGTH(jobDesc.preferredSkills)) * 20
+            totalPoints = totalPoints + prefScore
+        END IF
+        
+        RETURN totalPoints
+    END FUNCTION
+    
+    // Step 5: Identify Missing Keywords
+    FUNCTION findMissingSkills(resume, jobDesc)
+        SET missingSkills = EMPTY ARRAY
+        
+        FOR EACH skill IN jobDesc.requiredSkills DO
+            IF skill NOT IN resume.skills THEN
+                APPEND skill TO missingSkills
+            END IF
+        END FOR
+        
+        RETURN missingSkills
+    END FUNCTION
+    
+    // Step 6: Generate Recommendations
+    FUNCTION generateRecommendations(matchScore, missingSkills)
+        SET recommendations = EMPTY ARRAY
+        
+        IF matchScore >= 80 THEN
+            APPEND "Excellent match! Apply immediately." TO recommendations
+            APPEND "Prepare for technical interview on matched skills." TO recommendations
+        ELSE IF matchScore >= 60 THEN
+            APPEND "Good match. Consider applying." TO recommendations
+            APPEND "Learn missing skills: " + JOIN(missingSkills, ", ") TO recommendations
+        ELSE IF matchScore >= 40 THEN
+            APPEND "Moderate match. Upskill before applying." TO recommendations
+            APPEND "Focus on: " + JOIN(missingSkills, ", ") TO recommendations
+        ELSE
+            APPEND "Low match. Significant upskilling needed." TO recommendations
+            APPEND "Consider entry-level positions first." TO recommendations
+        END IF
+        
+        // Certification Recommendations
+        IF "CEH" NOT IN resume.certifications THEN
+            APPEND "Recommended: Obtain CEH certification for cybersecurity roles." TO recommendations
+        END IF
+        
+        RETURN recommendations
+    END FUNCTION
+    
+    // Step 7: Track Application
+    FUNCTION addApplication(company, position, matchScore)
+        SET newApplication = {
+            company: company,
+            position: position,
+            dateApplied: CURRENT_DATE(),
+            status: "Applied",
+            deadline: NULL,
+            matchScore: matchScore
+        }
+        
+        APPEND newApplication TO applicationTracker
+        
+        INPUT "Enter application deadline (YYYY-MM-DD): " INTO deadline
+        newApplication.deadline = deadline
+        
+        PRINT "Application tracked successfully!"
+        RETURN newApplication
+    END FUNCTION
+    
+    // Step 8: Display Application Status
+    FUNCTION displayApplications()
+        PRINT "\n=== Your Application Tracker ==="
+        
+        IF LENGTH(applicationTracker) == 0 THEN
+            PRINT "No applications tracked yet."
+            RETURN
+        END IF
+        
+        FOR EACH app IN applicationTracker DO
+            PRINT "Company: " + app.company
+            PRINT "Position: " + app.position
+            PRINT "Match Score: " + app.matchScore + "%"
+            PRINT "Status: " + app.status
+            PRINT "Deadline: " + app.deadline
+            
+            SET daysRemaining = CALCULATE_DAYS(app.deadline, CURRENT_DATE())
+            IF daysRemaining <= 7 AND app.status != "Interviewed" THEN
+                PRINT "⚠️ WARNING: Deadline approaching in " + daysRemaining + " days!"
+            END IF
+            PRINT "------------------------"
+        END FOR
+    END FUNCTION
+    
+    // Step 9: Update Application Status
+    FUNCTION updateStatus(company, newStatus)
+        FOR EACH app IN applicationTracker DO
+            IF app.company == company THEN
+                app.status = newStatus
+                PRINT "Status updated to: " + newStatus
+                
+                IF newStatus == "Interview Scheduled" THEN
+                    CALL prepareInterviewChecklist(app)
+                END IF
+                RETURN
+            END IF
+        END FOR
+        PRINT "Application not found."
+    END FUNCTION
+    
+    // Step 10: Interview Preparation Checklist
+    FUNCTION prepareInterviewChecklist(application)
+        PRINT "\n=== Interview Preparation Checklist ==="
+        PRINT "Position: " + application.position
+        
+        SET checklist = [
+            "Review company background and recent news",
+            "Study job description thoroughly",
+            "Prepare answers for common cybersecurity questions",
+            "Review OWASP Top 10 vulnerabilities",
+            "Practice penetration testing scenarios",
+            "Prepare questions to ask the interviewer",
+            "Review your resume and portfolio projects",
+            "Test video call setup (if virtual interview)"
+        ]
+        
+        FOR i = 1 TO LENGTH(checklist) DO
+            PRINT "[  ] " + checklist[i]
+        END FOR
+    END FUNCTION
+    
+    // Main Execution Flow
+    CALL loadResumeData()
+    
+    WHILE TRUE DO
+        PRINT "\n=== Main Menu ==="
+        PRINT "1. Analyze New Job Description"
+        PRINT "2. View Application Tracker"
+        PRINT "3. Update Application Status"
+        PRINT "4. Exit"
+        
+        INPUT "Enter choice: " INTO choice
+        
+        IF choice == 1 THEN
+            CALL loadJobDescription()
+            SET score = CALL calculateMatchScore(resumeData, jobDescription)
+            SET missing = CALL findMissingSkills(resumeData, jobDescription)
+            SET recommendations = CALL generateRecommendations(score, missing)
+            
+            PRINT "\n=== Analysis Results ==="
+            PRINT "Compatibility Score: " + score + "%"
+            PRINT "\nMissing Skills: " + JOIN(missing, ", ")
+            PRINT "\nRecommendations:"
+            FOR EACH rec IN recommendations DO
+                PRINT "• " + rec
+            END FOR
+            
+            INPUT "Track this application? (Y/N): " INTO trackChoice
+            IF trackChoice == "Y" THEN
+                INPUT "Enter company name: " INTO companyName
+                INPUT "Enter position title: " INTO positionTitle
+                CALL addApplication(companyName, positionTitle, score)
+            END IF
+            
+        ELSE IF choice == 2 THEN
+            CALL displayApplications()
+            
+        ELSE IF choice == 3 THEN
+            INPUT "Enter company name: " INTO companyName
+            PRINT "Status options: Applied, Under Review, Interview Scheduled, Rejected, Accepted"
+            INPUT "Enter new status: " INTO newStatus
+            CALL updateStatus(companyName, newStatus)
+            
+        ELSE IF choice == 4 THEN
+            PRINT "Exiting Job Application Analyzer. Good luck with your applications!"
+            BREAK
+            
+        ELSE
+            PRINT "Invalid choice. Please try again."
+        END IF
+    END WHILE
+
+END ALGORITHM
+
+================================================================================
+COMPLEXITY ANALYSIS:
+================================================================================
+Time Complexity:
+- loadResumeData(): O(1)
+- loadJobDescription(): O(1)
+- calculateMatchScore(): O(n*m) where n=resume skills, m=job skills
+- findMissingSkills(): O(n*m)
+- displayApplications(): O(k) where k=number of applications
+- Overall: O(n*m + k)
+
+Space Complexity:
+- O(n + m + k) for storing resume, job descriptions, and applications
+
+================================================================================
+REAL-WORLD APPLICATION:
+================================================================================
+This algorithm can be implemented as:
+1. Web application (React + Node.js)
+2. Mobile app (React Native)
+3. CLI tool (Python/Bash)
+4. Browser extension (JavaScript)
+
+It addresses real cybersecurity career challenges:
+- Skills gap identification
+- Application organization
+- Interview preparation
+- Career progression tracking
+
+================================================================================
+END OF ALGORITHM
+================================================================================
